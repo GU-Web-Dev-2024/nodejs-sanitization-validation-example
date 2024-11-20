@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Success</title>
+    <style>
+        /* Styling to ensure the token wraps within the viewport */
+        #tokenField {
+            width: 100%;
+            padding: 5px;
+            font-size: 14px;
+            word-wrap: break-word;
+            /* Break long words */
+            overflow-wrap: break-word;
+            /* For long unbreakable content */
+            white-space: pre-wrap;
+            /* Preserve spaces and wrap lines */
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            box-sizing: border-box;
+            /* Ensure padding is included in width */
+        }
+
+        #copyButton {
+            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+
+        #copyButton:hover {
+            background-color: #0056b3;
+        }
+
+        #statusMessage {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .failure {
+            color: red;
+        }
+    </style>
+    <script>
+        // Function to copy the token to clipboard
+        function copyToClipboard() {
+            const tokenField = document.getElementById("tokenField");
+            const statusMessage = document.getElementById("statusMessage");
+
+            navigator.clipboard.writeText(tokenField.textContent).then(() => {
+                statusMessage.textContent = "Token copied to clipboard!";
+                statusMessage.className = "success"; // Apply green success styling
+            }).catch(() => {
+                statusMessage.textContent = "Failed to copy token.";
+                statusMessage.className = "failure"; // Apply red failure styling
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <h1><%= message %></h1>
+    <% if (token) { %>
+    <p>Your token:</p>
+    <!-- Div to display the token with wrapping -->
+    <div id="tokenField"><%= token %></div>
+    <button id="copyButton" onclick="copyToClipboard()">Copy Token</button>
+    <!-- Placeholder for copy status message -->
+    <p id="statusMessage"></p>
+    <% } %>
+    <a href="/api/">Go to Home</a>
+</body>
+
+</html>

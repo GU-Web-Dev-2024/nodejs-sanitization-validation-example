@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>User Authentication App</title>
+</head>
+
+<body>
+    <h1>Welcome to the User Authentication App</h1>
+
+    <!-- Form for user registration -->
+    <form action="/api/register" method="post">
+        <h2>Register</h2>
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <input type="text" name="jobTitle" placeholder="Job Title" required>
+        <button type="submit">Register</button>
+    </form>
+
+    <!-- Form for user authentication -->
+    <form action="/api/auth" method="post">
+        <h2>Authenticate</h2>
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Authenticate</button>
+    </form>
+
+    <!-- Form for submitting a token to check status -->
+    <form action="/api/status" method="get">
+        <h2>Check Token Status</h2>
+        <input type="text" name="token" placeholder="Paste your token here" required>
+        <button type="submit">Check Status</button>
+    </form>
+</body>
+
+</html>

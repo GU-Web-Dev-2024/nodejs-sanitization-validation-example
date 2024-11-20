@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Token Status</title>
+</head>
+
+<body>
+    <h1><%= message %></h1>
+    <p>User: <%= name %></p>
+    <p>Job Title: <%= jobTitle %></p>
+
+    <!-- Form to modify username or job title -->
+    <form action="/api/modify" method="post">
+        <h2>Modify User Details</h2>
+        <input type="hidden" name="token" value="<%= token %>">
+        <input type="text" name="newName" placeholder="New Username">
+        <input type="text" name="newJobTitle" placeholder="New Job Title">
+        <button type="submit">Update Details</button>
+    </form>
+
+
+    <!-- Form to delete token -->
+    <form action="/api/delete" method="post">
+        <h2>Delete User</h2>
+        <input type="hidden" name="token" value="<%= token %>">
+        <label>
+            <input type="checkbox" name="confirm" required> Confirm Deletion
+        </label>
+        <button type="submit">Delete User</button>
+    </form>
+
+    <a href="/api/">Go to Home</a>
+</body>
+
+</html>
