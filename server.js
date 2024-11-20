@@ -1,3 +1,46 @@
+//Sanitizing data
+//modifications to sanitize data before accessing the database
+//https://medium.com/@SW_Integrity/mongodb-preventing-common-vulnerabilities-in-the-mean-stack-ac27c97198ec
+//https://www.npmjs.com/package/mongo-sanitize
+//https://thecodebarbarian.wordpress.com/2014/09/04/defending-against-query-selector-injection-attacks/
+//https://severalnines.com/database-blog/securing-mongodb-external-injection-attacks
+
+//1. npm install mongo-sanitize
+//2. require "mongo-sanitize"
+//3. pass parameters to the sanitize function to strip query parameters
+//      i.e. "make them safe" against query selector injection attacks
+//4. use the sanitized parameters instead of the parameters passed into
+//   the function
+
+//Validating data
+//https://www.npmjs.com/package/validatorjs
+//https://blog.logrocket.com/how-to-handle-data-validation-in-node-using-validatorjs/
+
+//1. npm install validatorjs
+//2. require "validatorjs"
+//3. define rules for your data
+//4. instantiate a new instance of your validator and pass it your data and rules
+//5. make decisions based on the results
+
+//Data Sanitization
+const sanitize = require("mongo-sanitize"); //2.
+
+//Data Validation
+const Validator = require("validatorjs"); //2.
+
+//3. we define an object that is used to match rules for our data
+//note that if we omit a property it is automatically validated
+var rules = {
+    name: "required|min3",
+    password: "required|min:5",
+    jobTitle: "string",
+    //other examples
+    //email: 'required|email',
+    //age: 'min:18'
+};
+
+//END VALIDATION BLOCK
+
 // Load environment variables from the .env file
 // Environment variables are used to securely store sensitive data like the JWT secret and database connection string.
 require("dotenv").config();
@@ -97,21 +140,77 @@ router.get("/", (req, res) => {
 // Register route: Handles user registration
 // Creates a new user in the database if the username doesn't already exist.
 router.post("/register", async (req, res) => {
-    const { username, password, jobTitle } = req.body;
 
-    // Check if the username already exists
-    const existingUser = await User.findOne({ name: username });
-    if (existingUser) {
-        return res.render("failure", { message: "Username already exists!" });
+    // Package our form data for processing
+    let data =
+    {
+        name: req.body.username,
+        password: req.body.password,
+        jobTitle: req.body.jobTitle
+    };
+
+    // SANITIZE! For step 3, we want to sanitize our post response instead of just inserting it
+    //data = sanitize(data);
+
+    /*
+        we'll use the debugger to "inject" the following code into our query
+    
+        { $gt: "" }
+        { $ne: null }
+        */
+
+    // try-catch because we get an error after trying to pass invalid data to query after sanitizing.
+    try {
+        // Check if the username already exists
+        const existingUser = await User.findOne({ name: data.name });
+
+        if (existingUser) {
+            return res.render("failure", { message: "Username already exists!" });
+        }
+    } catch (error) {
+        return res.render("failure", { message: "Unknown Error!" });
     }
 
     // Hash the password using bcrypt
     // bcrypt.hash() takes two arguments:
     // - password: the plain text password to hash.
     // - saltRounds: the cost factor, which determines how many hashing iterations to perform (higher = more secure but slower).
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 is a reasonable value for saltRounds to balance security and performance.
+    const hashedPassword = await bcrypt.hash(data.password, 10); // 10 is a reasonable value for saltRounds to balance security and performance.
     // Create and save a new user
-    const newUser = new User({ name: username, password: hashedPassword, jobTitle });
+
+    //DATA VALIDATION
+    /*
+    // for this example, assume we're not using a schema that would also
+    // validate...
+        REMINDER: these is our rules
+        var rules = {
+            name: "required|min3",
+            password: "required|min:5",
+            jobTitle: "string",   
+        };
+     */
+
+    // Validating
+    let validation = new Validator(data, rules /*, optionally we could pass in custom error messages*/);
+
+    console.log("Validation Passes: " + validation.passes() + " Validation Fails: " + validation.fails());
+
+    //Make a decision, e.g., redirect to error page if there's a validation error
+    if (validation.fails()) {
+        let message = `
+            name: ${validation.errors.first("name")}, 
+            password: ${validation.errors.first("password")}, 
+            jobTitle: ${validation.errors.first("jobTitle")}
+        `;
+
+        // Redirect to an error page and pass our error messages
+        // Ideally we would provide error feedback in the same
+        // Page that we accepted the data. In this case, I'm just
+        // using the same failure page from before for demonstration.
+        return res.render("failure", { message: `Validation error: ${message}` });
+    }
+
+    const newUser = new User({ name: data.name, password: hashedPassword, jobTitle: data.jobTitle });
     await newUser.save();
 
     // Render success page
