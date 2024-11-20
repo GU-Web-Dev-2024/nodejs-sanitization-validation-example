@@ -1,76 +1,142 @@
-Node.js User Authentication Examples
+Nodejs Data Sanitization and Validation (Demo)
 ====================================
 
-This repository provides two examples of implementing user authentication in Node.js:
+The following is a modified version of [this project](https://github.com/GU-Web-Dev-2024/nodejs-user-authentication-examples)
 
-1.  **JWT with bcryptjs** (`hashed-server.js`): Demonstrates secure password hashing using `bcryptjs` and token-based authentication with `jwt-simple`.
-2.  **JWT only** (`jwt-server.js`): A simpler implementation focusing solely on token-based authentication without password hashing.
+Overview
+--------
+
+This project is a demonstration of secure user management using Node.js. It highlights essential techniques for **data sanitization** and **validation** to mitigate vulnerabilities and ensure data integrity. The application includes CRUD operations and JWT-based authentication.
+
+* * *
 
 Features
 --------
 
-*   **User Registration**: Create new users with optional secure password hashing.
-*   **User Authentication**: Validate user credentials and generate JSON Web Tokens (JWTs).
-*   **Token Validation**: Check the validity of tokens to retrieve user details.
-*   **Password Security**: (bcryptjs example) Hashes passwords to protect user credentials.
+*   **Data Sanitization:** Protects against MongoDB query injection using [`mongo-sanitize`](https://www.npmjs.com/package/mongo-sanitize).
+*   **Data Validation:** Enforces input validation rules with [`validatorjs`](https://www.npmjs.com/package/validatorjs).
+*   **Secure Password Storage:** Hashes passwords using `bcryptjs`.
+*   **JWT Authentication:** Secures session management.
 
-Prerequisites
--------------
+* * *
 
-Before running the examples, ensure you have the following installed:
-
-*   [Node.js](https://nodejs.org/) (v14 or higher recommended)
-*   [MongoDB](https://www.mongodb.com/) (local or cloud instance)
-
-Installation
+Key Concepts
 ------------
 
-1.  Clone the repository:    
+### **Data Sanitization**
+
+This application sanitizes input to protect against injection attacks. For example, consider the following input:
+
+*   **Injected Data:**   
+    
+    `{ "name": { "$ne": null } }`
+    
+*   **Sanitized Data:**
+        
+    `{ "name": "[object Object]" }`
+    
+
+Sanitization removes any special query selectors, ensuring only valid data reaches the database.
+
+*   **Setup:**
+    
+    `npm install mongo-sanitize`
+    
+*   **Usage:**
+            
     ```
-    git clone https://github.com/your-username/nodejs-user-authentication-examples.git cd nodejs-user-authentication-examples
+    const sanitize = require("mongo-sanitize");
+    const sanitizedData = sanitize(req.body);
+    ```    
+
+* * *
+
+### **Data Validation**
+
+Validation ensures data meets [specified rules](https://www.npmjs.com/package/validatorjs#available-rules). For example:
+
+*   **Ruleset for ValidatorJS:**
+    
+    ```
+    const rules = {
+         name: "required|min:3",
+         password: "required|min:5",
+         email: "required|email",
+         age: "min:18"
+    };
     ```
     
-2.  Install dependencies:  
+
+Validation guarantees the following:
+
+*   `name`: Must be at least 3 characters and cannot be empty.
+    
+*   `password`: Must be at least 5 characters long.
+    
+*   `email`: Must follow a valid email format.
+    
+*   `age`: Must be at least 18.
+    
+*   **Setup:**
+       
+    `npm install validatorjs`
+    
+*   **Usage:**
+        
+    ```
+    const Validator = require("validatorjs");
+    const validation = new Validator(data, rules);  
+    
+    if (validation.fails()) {
+             console.log(validation.errors.all()); 
+    }
+    ```
+    
+
+* * *
+
+Environment Variables
+---------------------
+
+Sensitive data is stored in a `.env` file:
+
+*   `PORT`: Application port
+*   `SECRET`: JWT secret key
+
+* * *
+
+Security Practices
+------------------
+
+1.  **Input Sanitization:** Mitigates injection attacks.
+2.  **Validation Rules:** Ensures data integrity and reliability.
+3.  **Password Hashing:** Protects user credentials.
+
+* * *
+
+Run Instructions
+----------------
+
+1.  Install dependencies:
     
     `npm install`
     
-3.  Create a `.env` file in the root directory and add your secret key:
-    
-    `SECRET=your-secret-key`
-    
-    (use a long randomized string for the secret key, e.g., replace `your-secret-key` with something like `qs3fda95h6z0JUN9wgTy1j2Cl54gB6yzG`)
-
-4.  Start your MongoDB server if running locally and update the MongoDB connection string:
-
-*   In both `jwt-server.js` and `hashed-server.js`, locate the MongoDB connection string:
-
-    `mongoose.connect("mongodb://127.0.0.1:27017/Users");`
-    
-*   Replace it with your MongoDB connection string if you are using a remote database or a custom local configuration.
-
-Running the Examples
---------------------
-
-1.  **JWT with bcryptjs**:
-    
-    *   Start the `hashed-server.js`:
-
-        `node hashed-server.js`
+2.  Configure `.env` with required variables.
+3.  Start the server:
         
-2.  **JWT only**:
+    `node server.js`
     
-    *   Start the `jwt-server.js`:
-        
-        `node jwt-server.js`
-        
-3.  Access the APIs at `http://localhost:3000/api` using your browser.
-    
+4.  Access the application at `http://localhost:<PORT>/api`.
 
-API Endpoints
--------------
+* * *
 
-*   `POST /api/register` - Register a new user.
-*   `POST /api/auth` - Authenticate a user and receive a JWT.
-*   `GET /api/status?token=TOKEN` - Validate a token and retrieve user details.
-*   `POST /api/modify` - Modify user details (requires a token).
-*   `POST /api/delete` - Delete a user account (requires a token).
+References
+----------
+
+*   [MongoDB Injection Prevention](https://medium.com/@SW_Integrity/mongodb-preventing-common-vulnerabilities-in-the-mean-stack-ac27c97198ec)
+*   [Mongo Sanitize](https://www.npmjs.com/package/mongo-sanitize)
+*   [Query Selector Injection Attacks](https://thecodebarbarian.wordpress.com/2014/09/04/defending-against-query-selector-injection-attacks/)
+*   [Securing MongoDB](https://severalnines.com/database-blog/securing-mongodb-external-injection-attacks)
+*   [ValidatorJS Documentation](https://www.npmjs.com/package/validatorjs)
+*   [LogRocket ValidatorJS Guide](https://blog.logrocket.com/how-to-handle-data-validation-in-node-using-validatorjs/)
+
